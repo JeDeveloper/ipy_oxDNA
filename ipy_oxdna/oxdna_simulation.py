@@ -125,6 +125,7 @@ class Simulation(SimDirInfo):
         self.oat = OxdnaAnalysisTools(self)
         self.sequence_dependant = SequenceDependant(self)
 
+
     def build(self, clean_build=False):
         """
         Build dat, top, and input files in simulation directory.
@@ -157,6 +158,7 @@ class Simulation(SimDirInfo):
 
         self.sim_files.parse_current_files()
 
+
     def input_file(self, parameters):
         """
         Modify the parameters of the oxDNA input file, all parameters are avalible at https://lorenzo-rovigatti.github.io/oxDNA/input.html
@@ -166,12 +168,14 @@ class Simulation(SimDirInfo):
         """
         self.input.modify_input(parameters)
 
+
     def add_protein_par(self):
         """
         Add a parfile from file_dir to sim_dir and add file name to input file
         """
         self.build_sim.build_par()
         self.protein.par_input()
+
 
     def add_force_file(self):
         """
@@ -180,6 +184,7 @@ class Simulation(SimDirInfo):
         self.build_sim.get_force_file()
         self.build_sim.build_force_from_file()
         self.input_file({'external_forces': '1'})
+
 
     def add_force(self, force_js):
         """
@@ -191,6 +196,7 @@ class Simulation(SimDirInfo):
         if not os.path.exists(os.path.join(self.sim_dir, "forces.json")):
             self.input_file({'external_forces': '1'})
         self.build_sim.build_force(force_js)
+
 
     def add_observable(self, observable_js: Union[Observable, dict[str, Any]]):
         """
@@ -206,6 +212,7 @@ class Simulation(SimDirInfo):
         else:
             self.add_observable(observable_js.export())
 
+
     def slurm_run(self, run_file, job_name='oxDNA'):
         """
         Write a provided sbatch run file to the simulation directory.
@@ -217,17 +224,15 @@ class Simulation(SimDirInfo):
         self.sim_files.run_file = os.path.abspath(os.path.join(self.sim_dir, run_file))
         self.slurm_run = SlurmRun(self.sim_dir, run_file, job_name)
 
+
     def make_sequence_dependant(self):
         """ Add a sequence dependant file to simulation directory and modify input file to use it."""
         self.sequence_dependant.make_sim_sequence_dependant()
 
-    def pickle_sim(self):
-        """ Pickle the simulation object to a file."""
-        with open(f'{self.sim_dir}/sim.pkl', 'wb') as f:
-            pickle.dump(self, f)
 
     def get_file_dir(self) -> Path:
         return self._file_dir
+
 
     def set_file_dir(self, p: Union[Path, str]):
         if isinstance(p, Path):
@@ -236,33 +241,17 @@ class Simulation(SimDirInfo):
         else:
             self.set_file_dir(Path(p))
 
+
     def get_sim_dir(self) -> Path:
         return self._sim_dir
+
 
     def set_sim_dir(self, p: Union[Path, str]):
         if isinstance(p, Path):
             self._sim_dir = p
         else:
             self.set_sim_dir(Path(p))
-
-    @classmethod
-    def from_pickle(cls, filename):
-        """ Read a pickled simulation object from a file."""
-        with open(filename, 'rb') as f:
-            sim = pickle.load(f)
-        return sim
-
-    def pickle_sim(self):
-        """ Pickle the simulation object to a file."""
-        with open(f'{self.sim_dir}/sim.pkl', 'wb') as f:
-            pickle.dump(self, f)
-
-    @classmethod
-    def from_pickle(cls, filename):
-        """ Read a pickled simulation object from a file."""
-        with open(filename, 'rb') as f:
-            sim = pickle.load(f)
-        return sim
+            
 
     def pickle_sim(self):
         """ Pickle the simulation object to a file."""
@@ -621,6 +610,7 @@ class OxpyRun(SimulationComponent):
         if self.join:
             p.join()
         self.process = p
+        self.sim.sim_files.parse_current_files()
 
     def run_complete(self):
         """Run an oxDNA simulation"""
@@ -2115,34 +2105,317 @@ class Analysis(SimulationComponent):
         plt.plot(bins[:-1], H, label=self.sim.sim_dir.split("/")[-1])
 
 
-class SimFiles(SimulationComponent):
-    """
-    Parse the current files present in simulation directory
-    """
-    files_list: list[str]
+class Observable:
+    """ Currently implemented observables for this oxDNA wrapper."""
 
-    dat: Path
-    top: Path
-    traj: Path
-    last_conf: Path
-    force: Path
-    input: Path
-    input_js: Path
-    observables: Path
-    run_file: Path
-    energy: Path
-    com_distance: Path
-    cms_positions: Path
-    par: Path
-    last_hist: Path
-    hb_observable: Path
-    potential_energy: Path
-    all_observables: Path
-    hb_contacts: Path
-    run_time_custom_observable: Path
+    @staticmethod
+    def distance(particle_1=None, particle_2=None, PBC=None, print_every=None, name=None):
+        """
+        Calculate the distance between two (groups) of particles
+        """
+        return ({
+            "output": {
+                "print_every": print_every,
+                "name": name,
+                "cols": [
+                    {
+                        "type": "distance",
+                        "particle_1": particle_1,
+                        "particle_2": particle_2,
+                        "PBC": PBC
+                    }
+                ]
+            }
+        })
 
-    def __init__(self, sim: Simulation):
-        SimulationComponent.__init__(self, sim)
+    @staticmethod
+    def hb_list(print_every=None, name=None, only_count=None):
+        """
+        Compute the number of hydrogen bonds between the specified particles
+        """
+        return ({
+            "output": {
+                "print_every": print_every,
+                "name": name,
+                "cols": [
+                    {
+                        "type": "hb_list",
+                        "order_parameters_file": "hb_list.txt",
+                        "only_count": only_count
+                    }
+                ]
+            }
+        })
+
+    @staticmethod
+    def particle_position(particle_id=None, orientation=None, absolute=None, print_every=None, name=None):
+        """
+        Return the x,y,z postions of specified particles
+        """
+        return ({
+            "output": {
+                "print_every": print_every,
+                "name": name,
+                "cols": [
+                    {
+                        "type": "particle_position",
+                        "particle_id": particle_id,
+                        "orientation": orientation,
+                        "absolute": absolute
+                    }
+                ]
+            }
+        })
+
+    @staticmethod
+    def potential_energy(print_every=None, split=None, name=None, precision=6, general_format=True):
+        """
+        Return the potential energy
+        """
+        return ({
+            "output": {
+                "print_every": f'{print_every}',
+                "name": name,
+                "cols": [
+                    {
+                        "type": "potential_energy",
+                        "split": f"{split}",
+                        "precision" : f'{precision}',
+                        "general_format": f'{general_format}'
+                    }
+                ]
+            }
+        })
+
+    @staticmethod
+    def force_energy(print_every=None, name=None, print_group=None, precision=6, general_format='true'):
+        """
+        Return the energy exerted by external forces
+        """
+        if print_group is not None:
+            return ({
+                "output": {
+                    "print_every": f'{print_every}',
+                    "name": name,
+                    "cols": [
+                        {
+                            "type": "force_energy",
+                            "print_group": f"{print_group}",
+                            "precision": f'{precision}',
+                            "general_format": f'{general_format}'
+                        }
+                    ]
+                }
+            })
+        else:
+            return ({
+                "output": {
+                    "print_every": f'{print_every}',
+                    "name": name,
+                    "cols": [
+                        {
+                            "type": "force_energy",
+                            "precision": f'{precision}',
+                        }
+                    ]
+                }
+            })
+
+    @staticmethod
+    def kinetic_energy(print_every=None, name=None):
+        """
+        Return the kinetic energy  
+        """
+        return ({
+            "output": {
+                "print_every": f'{print_every}',
+                "name": name,
+                "cols": [
+                    {
+                        "type": "kinetic_energy"
+                    }
+                ]
+            }
+        })
+
+
+class Force:
+    """ Currently implemented external forces for this oxDNA wrapper."""
+
+    @staticmethod
+    def morse(particle=None, ref_particle=None, a=None, D=None, r0=None, PBC=None):
+        "Morse potential"
+        return ({"force": {
+            "type": 'morse',
+            "particle": f'{particle}',
+            "ref_particle": f'{ref_particle}',
+            "a": f'{a}',
+            "D": f'{D}',
+            "r0": f'{r0}',
+            "PBC": f'{PBC}',
+        }
+        })
+
+    @staticmethod
+    def skew_force(particle=None, ref_particle=None, stdev=None, r0=None, shape=None, PBC=None):
+        "Skewed Gaussian potential"
+        return ({"force": {
+            "type": 'skew_trap',
+            "particle": f'{particle}',
+            "ref_particle": f'{ref_particle}',
+            "stdev": f'{stdev}',
+            "r0": f'{r0}',
+            "shape": f'{shape}',
+            "PBC": f'{PBC}'
+        }
+        })
+
+    @staticmethod
+    def com_force(com_list=None, ref_list=None, stiff=None, r0=None, PBC=None, rate=None):
+        "Harmonic trap between two groups"
+        return ({"force": {
+            "type": 'com',
+            "com_list": f'{com_list}',
+            "ref_list": f'{ref_list}',
+            "stiff": f'{stiff}',
+            "r0": f'{r0}',
+            "PBC": f'{PBC}',
+            "rate": f'{rate}'
+        }
+        })
+
+    @staticmethod
+    def mutual_trap(particle=None, ref_particle=None, stiff=None, r0=None, PBC=None):
+        """
+        A spring force that pulls a particle towards the position of another particle
+    
+        Parameters:
+            particle (int): the particle that the force acts upon
+            ref_particle (int): the particle that the particle will be pulled towards
+            stiff (float): the force constant of the spring (in simulation units)
+            r0 (float): the equlibrium distance of the spring
+            PBC (bool): does the force calculation take PBC into account (almost always 1)
+        """
+        return ({"force": {
+            "type": "mutual_trap",
+            "particle": particle,
+            "ref_particle": ref_particle,
+            "stiff": stiff,
+            "r0": r0,
+            "PBC": PBC
+        }
+        })
+
+    @staticmethod
+    def string(particle, f0, rate, direction):
+        """
+        A linear force along a vector
+    
+        Parameters:
+            particle (int): the particle that the force acts upon
+            f0 (float): the initial strength of the force at t=0 (in simulation units)
+            rate (float or SN string): growing rate of the force (simulation units/timestep)
+            dir ([float, float, float]): the direction of the force
+        """
+        return ({"force": {
+            "type": "string",
+            "particle": particle,
+            "f0": f0,
+            "rate": rate,
+            "dir": direction
+        }})
+
+    @staticmethod
+    def harmonic_trap(particle, pos0, stiff, rate, direction):
+        """
+        A linear potential well that traps a particle
+    
+        Parameters:
+            particle (int): the particle that the force acts upon
+            pos0 ([float, float, float]): the position of the trap at t=0
+            stiff (float): the stiffness of the trap (force = stiff * dx)
+            rate (float): the velocity of the trap (simulation units/time step)
+            direction ([float, float, float]): the direction of movement of the trap
+        """
+        return ({"force": {
+            "type": "trap",
+            "particle": particle,
+            "pos0": pos0,
+            "rate": rate,
+            "dir": direction
+        }})
+
+    @staticmethod
+    def rotating_harmonic_trap(particle, stiff, rate, base, pos0, center, axis, mask):
+        """
+        A harmonic trap that rotates in space with constant angular velocity
+    
+        Parameters:
+            particle (int): the particle that the force acts upon
+            pos0 ([float, float, float]): the position of the trap at t=0
+            stiff (float): the stiffness of the trap (force = stiff * dx)
+            rate (float): the angular velocity of the trap (simulation units/time step)
+            base (float): initial phase of the trap
+            axis ([float, float, float]): the rotation axis of the trap
+            mask([float, float, float]): the masking vector of the trap (force vector is element-wise multiplied by mask)
+        """
+        return ({"force": {
+            "type": "twist",
+            "particle": particle,
+            "stiff": stiff,
+            "rate": rate,
+            "base": base,
+            "pos0": pos0,
+            "center": center,
+            "axis": axis,
+            "mask": mask
+        }})
+
+    @staticmethod
+    def repulsion_plane(particle, stiff, direction, position):
+        """
+        A plane that forces the affected particle to stay on one side.
+    
+        Parameters:
+            particle (int): the particle that the force acts upon.  -1 will act on whole system.
+            stiff (float): the stiffness of the trap (force = stiff * distance below plane)
+            dir ([float, float, float]): the normal vecor to the plane
+            position(float): position of the plane (plane is d0*x + d1*y + d2*z + position = 0)
+        """
+        return ({"force": {
+            "type": "repulsion_plane",
+            "particle": particle,
+            "stiff": stiff,
+            "dir": direction,
+            "position": position
+        }})
+
+    @staticmethod
+    def repulsion_sphere(particle, center, stiff, r0, rate=1):
+        """
+        A sphere that encloses the particle
+        
+        Parameters:
+            particle (int): the particle that the force acts upon
+            center ([float, float, float]): the center of the sphere
+            stiff (float): stiffness of trap
+            r0 (float): radius of sphere at t=0
+            rate (float): the sphere's radius changes to r = r0 + rate*t
+        """
+        return ({"force": {
+            "type": "sphere",
+            "center": center,
+            "stiff": stiff,
+            "r0": r0,
+            "rate": rate
+        }})
+
+
+class SimFiles:
+    """ Parse the current files present in simulation directory"""
+
+    def __init__(self, sim):
+        self.sim = sim
         if os.path.exists(self.sim.sim_dir):
             self.file_list = os.listdir(self.sim.sim_dir)
             self.parse_current_files()

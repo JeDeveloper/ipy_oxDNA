@@ -93,7 +93,7 @@ def particle_position(particle_id=None, orientation=None, absolute=None, print_e
     # })
 
 
-def potential_energy(print_every=None, split=None, name=None) -> dict:
+def potential_energy(print_every=None, split=None, name=None, precision=6, general_format=True) -> dict:
     """
     Return the potential energy
     """
@@ -101,7 +101,9 @@ def potential_energy(print_every=None, split=None, name=None) -> dict:
                       print_every,
                       ObservableColumn(
                           "potential_energy",
-                          split=f"{split}"
+                          split=f"{split}",
+                          precision=f"{precision}",
+                          general_format=f"{general_format}"
                       )).export()
     # return {
     #     "output": {
@@ -119,14 +121,16 @@ def potential_energy(print_every=None, split=None, name=None) -> dict:
 
 def force_energy(print_every: Union[None, int] = None,
                  name: Union[None, str] = None,
-                 print_group=None) -> dict:
+                 print_group=None,
+                 precision=6, 
+                 general_format=True) -> dict:
     """
     Return the energy exerted by external forces
     """
     if print_group is not None:
-        col = ObservableColumn("force_energy", print_group=f"{print_group}")
+        col = ObservableColumn("force_energy", print_group=f"{print_group}", precision=f"{precision}", general_format=f"{general_format}")
     else:
-        col = ObservableColumn("force_energy")
+        col = ObservableColumn("force_energy", precision=f"{precision}", general_format=f"{general_format}")
     return Observable(name, print_every, col).export()
     # if print_group is not None:
     #     return ({
