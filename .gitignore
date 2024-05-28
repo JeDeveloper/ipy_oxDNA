@@ -21,3 +21,4 @@ ipy_oxdna.egg-info
 ipy_oxdna/patchy_particles.py
 execute_analysis.ipynb
 MANIFEST.in
+.pytest_cache
