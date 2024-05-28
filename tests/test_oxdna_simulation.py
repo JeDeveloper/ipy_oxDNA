@@ -1,7 +1,8 @@
+from ipy_oxdna.simulation.oxdna_simulation import Simulation
+from ipy_oxdna.distributed.distributed import SimulationManager
 import pytest
 import shutil
 from pathlib import Path
-from ipy_oxdna.oxdna_simulation import Simulation, SimulationManager
 from unittest.mock import Mock, patch
 import os
 

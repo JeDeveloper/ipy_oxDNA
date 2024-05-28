@@ -2,7 +2,7 @@ import pytest
 import shutil
 from pathlib import Path
 from ipy_oxdna.umbrella.umbrella_sampling import ComUmbrellaSampling, MeltingUmbrellaSampling
-from ipy_oxdna.oxdna_simulation import SimulationManager
+from ipy_oxdna.distributed.distributed import SimulationManager
 from unittest.mock import Mock, patch
 import numpy as np
 

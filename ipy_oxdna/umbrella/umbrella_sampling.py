@@ -1,6 +1,7 @@
 
-from ..oxdna_simulation import Simulation, SimulationManager, Observable
-from ..force import Force
+from ..simulation.oxdna_simulation import Simulation, Observable
+from ..distributed.distributed import SimulationManager
+from ..simulation.force import Force
 from .wham_analysis import *
 from .vmmc import VirtualMoveMonteCarlo
 from .pymbar_analysis import PymbarAnalysis
