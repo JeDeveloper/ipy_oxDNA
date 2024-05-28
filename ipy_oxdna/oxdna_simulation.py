@@ -619,7 +619,7 @@ class OxpyRun(SimulationComponent):
         # capture outputs
         capture = py.io.StdCaptureFD()
         if self.continue_run is not False:
-            self.sim.input_file({"conf_file": self.sim.sim_files.last_conf, "refresh_vel": "0",
+            self.sim.input_file({"conf_file": self.sim.sim_files.last_conf.as_posix(), "refresh_vel": "0",
                                  "restart_step_counter": "0", "steps": f'{self.continue_run}'})
         start_dir = os.getcwd()
         os.chdir(self.sim.sim_dir)

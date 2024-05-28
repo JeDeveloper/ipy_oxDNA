@@ -86,7 +86,7 @@ class TestSimulation:
 
         # Check if both top and dat files are copied
         top_file = sim.sim_dir / 'duplex_box_30.top'
-        dat_file = sim.sim_dir / 'duplex_box_30.dat'
+        dat_file = sim.sim_dir / 'init.dat'
 
         print(f"Top file exists: {top_file.exists()}")
         print(f"Dat file exists: {print(os.listdir(sim.sim_dir))}")
@@ -112,7 +112,7 @@ class TestSimulation:
         
         # Check if both top and dat files are copied
         assert (sim.sim_dir / 'duplex_box_30.top').exists(), "Top file was not copied correctly"
-        assert (sim.sim_dir / 'last_conf.dat').exists(), "Dat file was not copied correctly"
+        assert (sim.sim_dir / 'init.dat').exists(), "Dat file was not copied correctly"
         
         # Check for the creation of input files
         assert (sim.sim_dir / 'input').exists(), "Input file was not created"
