@@ -12,7 +12,7 @@ import subprocess as sp
 import timeit
 import signal
 from time import sleep
-
+import traceback
 
 #TODO: Think of a way to make my umbrella sampling and generate replica distributed.
 
