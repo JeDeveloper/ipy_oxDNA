@@ -1,8 +1,8 @@
 
 from ..oxdna_simulation import Simulation, SimulationManager, Observable
 from ..force import Force
-from ..wham_analysis import *
-from ..vmmc import VirtualMoveMonteCarlo
+from .wham_analysis import *
+from .vmmc import VirtualMoveMonteCarlo
 from .pymbar_analysis import PymbarAnalysis
 import multiprocessing as mp
 import os
@@ -1762,7 +1762,7 @@ class UmbrellaAnalysis:
                                                                           sliding_window=sliding_window, fig=fig)
 
     def combine_hist_observable(self, observable, idxes, bins=10, fig=True):
-        for sim in self.base_umbrella.production_sims[idx]:
+        for sim in self.base_umbrella.production_sims[idxes]:
             file_name = observable['output']['name']
             conf_interval = float(observable['output']['print_every'])
             df = pd.read_csv(f"{self.sim.sim_dir}/{file_name}", header=None, engine='pyarrow')
